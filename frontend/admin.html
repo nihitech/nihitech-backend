@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nihi Tech - Admin Panel</title>
+<style>
+body {
+  font-family: Arial;
+  padding: 20px;
+  background: #f5f7fa;
+}
+
+h2 {
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th, td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background: #0a192f;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Leads Dashboard</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Email</th>
+      <th>Message</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody id="leadTable"></tbody>
+</table>
+
+<script>
+async function loadLeads() {
+  const res = await fetch("http://localhost:3000/api/leads");
+  const data = await res.json();
+
+  const table = document.getElementById("leadTable");
+
+  data.forEach(lead => {
+    const row = `
+      <tr>
+        <td>${lead.name}</td>
+        <td>${lead.phone}</td>
+        <td>${lead.email}</td>
+        <td>${lead.message}</td>
+        <td>${new Date(lead.created_at).toLocaleString()}</td>
+      </tr>
+    `;
+    table.innerHTML += row;
+  });
+}
+
+loadLeads();
+</script>
+
+</body>
+</html>
