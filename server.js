@@ -26,47 +26,33 @@ db.connect(err => {
 });
 
 app.post("/api/lead", async (req, res) => {
-  const { name, phone, email, message } = req.body;
+  try {
+    const { name, phone, email, message } = req.body;
 
-  const sql = "INSERT INTO leads (name, phone, email, message) VALUES (?, ?, ?, ?)";
-
-  db.query(sql, [name, phone, email, message], async (err, result) => {
-    if (err) {
-      console.log(err);
-      return res.status(500).json({ success: false });
-    }
-
-    // 🔥 Send WhatsApp Alert AFTER DB success
-    try {
-      await client.messages.create({
-        from: "whatsapp:+14155238886",
-        to: "whatsapp:+918778490290",
-        body: `🔥 New Lead Received!
+    await client.messages.create({
+      from: "whatsapp:+14155238886",
+      to: "whatsapp:+91YOURNUMBER",
+      body: `🔥 New Lead Received!
 
 Name: ${name}
 Phone: ${phone}
 Email: ${email}
 Message: ${message}`
-      });
-    } catch (error) {
-      console.log("Twilio Error:", error.message);
-    }
+    });
 
-    res.json({ success: true });
-  });
-});
+    const sql = "INSERT INTO leads (name, phone, email, message) VALUES (?, ?, ?, ?)";
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-});
+    db.query(sql, [name, phone, email, message], (err, result) => {
+      if (err) {
+        console.log("DB ERROR:", err);
+        return res.status(500).json({ success: false });
+      }
 
-app.get("/api/leads", (req, res) => {
-  const sql = "SELECT * FROM leads ORDER BY created_at DESC";
+      res.json({ success: true });
+    });
 
-  db.query(sql, (err, result) => {
-    if (err) {
-      return res.status(500).json({ success: false });
-    }
-    res.json(result);
-  });
+  } catch (error) {
+    console.log("SERVER ERROR:", error);
+    res.status(500).json({ success: false });
+  }
 });
