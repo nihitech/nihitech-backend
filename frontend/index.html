@@ -244,14 +244,6 @@ footer {
 <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    AOS.init({
-      duration: 1000,
-      once: true
-    });
-  });
-</script>
-<script>
 document.getElementById("leadForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
@@ -259,7 +251,7 @@ document.getElementById("leadForm").addEventListener("submit", async function(e)
   const data = Object.fromEntries(formData.entries());
 
   try {
-    const res = await fetch("http://localhost:3000/api/lead", {
+    const res = await fetch("https://nihitech-api.onrender.com/api/lead", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -269,14 +261,17 @@ document.getElementById("leadForm").addEventListener("submit", async function(e)
 
     const result = await res.json();
 
-    if(result.success){
+    if (result.success) {
       document.getElementById("responseMsg").innerText = "✅ Request submitted successfully!";
       this.reset();
+    } else {
+      document.getElementById("responseMsg").innerText = "❌ Failed to submit!";
     }
+
   } catch (error) {
-    document.getElementById("responseMsg").innerText = "❌ Something went wrong!";
+    console.log(error);
+    document.getElementById("responseMsg").innerText = "❌ Server connection error!";
   }
 });
-</script>
-</body>
+</script></body>
 </html>
