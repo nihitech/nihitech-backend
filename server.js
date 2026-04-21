@@ -29,23 +29,31 @@ app.post("/api/lead", async (req, res) => {
   try {
     const { name, phone, email, message } = req.body;
 
-    await client.messages.create({
-      from: "whatsapp:+14155238886",
-      to: "whatsapp:+91YOURNUMBER",
-      body: `🔥 New Lead Received!
+    console.log("DATA RECEIVED:", req.body);
+
+    // 🔹 Save to DB FIRST
+    const sql = "INSERT INTO leads (name, phone, email, message) VALUES (?, ?, ?, ?)";
+
+    db.query(sql, [name, phone, email, message], async (err, result) => {
+      if (err) {
+        console.log("DB ERROR:", err);
+        return res.status(500).json({ success: false });
+      }
+
+      // 🔹 Send WhatsApp (optional, don't break API)
+      try {
+        await client.messages.create({
+          from: "whatsapp:+14155238886",
+          to: "whatsapp:+918778490290", 
+          body: `🔥 New Lead Received!
 
 Name: ${name}
 Phone: ${phone}
 Email: ${email}
 Message: ${message}`
-    });
-
-    const sql = "INSERT INTO leads (name, phone, email, message) VALUES (?, ?, ?, ?)";
-
-    db.query(sql, [name, phone, email, message], (err, result) => {
-      if (err) {
-        console.log("DB ERROR:", err);
-        return res.status(500).json({ success: false });
+        });
+      } catch (twilioErr) {
+        console.log("TWILIO ERROR:", twilioErr);
       }
 
       res.json({ success: true });
