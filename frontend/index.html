@@ -247,6 +247,13 @@ footer {
 document.getElementById("leadForm").addEventListener("submit", async function(e) {
   e.preventDefault();
 
+  const btn = this.querySelector("button");
+  const msg = document.getElementById("responseMsg");
+
+  btn.disabled = true;
+  btn.innerText = "Submitting...";
+  msg.innerText = "";
+
   const formData = new FormData(this);
   const data = Object.fromEntries(formData.entries());
 
@@ -259,19 +266,29 @@ document.getElementById("leadForm").addEventListener("submit", async function(e)
       body: JSON.stringify(data)
     });
 
+    // ✅ Check if response is OK
+    if (!res.ok) {
+      throw new Error("Server error");
+    }
+
     const result = await res.json();
 
     if (result.success) {
-      document.getElementById("responseMsg").innerText = "✅ Request submitted successfully!";
+      msg.style.color = "green";
+      msg.innerText = "✅ Request submitted successfully!";
       this.reset();
     } else {
-      document.getElementById("responseMsg").innerText = "❌ Failed to submit!";
+      msg.style.color = "red";
+      msg.innerText = result.message || "❌ Failed to submit!";
     }
 
   } catch (error) {
-    console.log(error);
-    document.getElementById("responseMsg").innerText = "❌ Server connection error!";
+    console.log("ERROR:", error);
+    msg.style.color = "red";
+    msg.innerText = "❌ Server connection error!";
   }
+
+  btn.disabled = false;
+  btn.innerText = "Request Audit";
 });
-</script></body>
-</html>
+</script>

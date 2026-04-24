@@ -84,9 +84,11 @@ app.get("/api/leads", async (req, res) => {
     .order("created_at", { ascending: false });
 
   if (error) {
+    console.log("FETCH ERROR:", error);
     return res.status(500).json({ success: false });
   }
 
+  console.log("LEADS FETCHED:", data.length);
   res.json(data);
 });
 
