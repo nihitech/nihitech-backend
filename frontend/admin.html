@@ -52,7 +52,7 @@ th {
 
 <script>
 async function loadLeads() {
-  const res = await fetch("http://localhost:3000/api/leads");
+  const res = await fetch("https://nihitech-api.onrender.com/api/leads");
   const data = await res.json();
 
   const table = document.getElementById("leadTable");
