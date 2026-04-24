@@ -7,38 +7,52 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// 🔹 Supabase
+// ✅ Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_KEY
 );
 
-// 🔹 Twilio
-const client = new twilio(
-  process.env.TWILIO_SID,
-  process.env.TWILIO_TOKEN
-);
+// ✅ Twilio (safe init)
+let client;
+if (process.env.TWILIO_SID && process.env.TWILIO_TOKEN) {
+  client = new twilio(
+    process.env.TWILIO_SID,
+    process.env.TWILIO_TOKEN
+  );
+}
 
-// 🔹 API
+// ✅ POST Lead API
 app.post("/api/lead", async (req, res) => {
   try {
     const { name, phone, email, message } = req.body;
 
     console.log("DATA RECEIVED:", req.body);
 
-    // ✅ Save to Supabase
-    const { error } = await supabase
+    // 🔒 Basic validation
+    if (!name || !phone || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields"
+      });
+    }
+
+    // ✅ Insert into Supabase
+    const { data, error } = await supabase
       .from("leads")
       .insert([{ name, phone, email, message }]);
 
     if (error) {
       console.log("SUPABASE ERROR:", error);
-      return res.status(500).json({ success: false });
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
 
-    // ✅ Send WhatsApp (optional)
-    try {
-      await client.messages.create({
+    // ✅ Send WhatsApp (non-blocking)
+    if (client) {
+      client.messages.create({
         from: "whatsapp:+14155238886",
         to: "whatsapp:+918778490290",
         body: `🔥 New Lead Received!
@@ -47,20 +61,39 @@ Name: ${name}
 Phone: ${phone}
 Email: ${email}
 Message: ${message}`
-      });
-    } catch (twilioErr) {
-      console.log("TWILIO ERROR:", twilioErr);
+      }).catch(err => console.log("TWILIO ERROR:", err));
     }
 
-    res.json({ success: true });
+    return res.json({ success: true });
 
   } catch (err) {
     console.log("SERVER ERROR:", err);
-    res.status(500).json({ success: false });
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
   }
 });
 
-// 🔹 Start server
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
+
+// ✅ OPTIONAL: GET Leads (for admin panel)
+app.get("/api/leads", async (req, res) => {
+  const { data, error } = await supabase
+    .from("leads")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    return res.status(500).json({ success: false });
+  }
+
+  res.json(data);
+});
+
+
+// ✅ IMPORTANT: Use dynamic port for Render
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
